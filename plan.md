@@ -760,7 +760,7 @@ Top-level destinations: **Home · Library · Games · Files · Workspaces · Mul
 
 Global elements: search, dock, quick settings, notifications, active workspace indicator, current display indicator, profile menu.
 
-**App cards:** artwork or icon · name · running indicator · last-used info · launch button · context menu · custom background · workspace association. Games get cinematic artwork; productivity apps get restrained icon/artwork.
+**App cards:** artwork or icon · name · running indicator · last-used info · launch button · context menu · custom background · workspace association. Games get cinematic artwork; productivity apps get restrained icon/artwork. **Icons are always the application's own icon, upscaled for HD — never a generic template glyph** (see §11.4 "App icons").
 
 **Dynamic backgrounds:** highlighting an app crossfades the Home background to its artwork (subtle parallax). Use crossfades, not expensive full-screen effects on every hover.
 
@@ -832,6 +832,13 @@ Grid/list views · search and filters · categories, folders, collections · fav
 
 - Start Menu shortcuts · Desktop shortcuts (**first import: cleans the original messy desktop**) · App Paths · registered app entries · packaged/UWP enumeration · uninstall-registry entries · user-imported executables/shortcuts.
 - Discovery and **launchability are separate properties**; an uninstall entry is not automatically a launch target.
+
+**App icons (no template icons):** every place an application appears — Home cards, dock, switcher cards, the Running list, search results — shows **that application's own icon**, taken from its executable (or, for packaged/UWP apps, from the package's logo assets), upscaled so it looks crisp on HD/4K displays. A generic glyph is only ever the loading/failure fallback.
+
+- **Source order:** (1) the largest native size available — Windows executables commonly embed up to 256×256 (PNG-compressed) layers, requested through the Shell (`IShellItemImageFactory` / icon resources) · (2) packaged-app logo assets (pick the largest scale variant) · (3) the shortcut's icon override · (4) a user-chosen custom icon (above), which always wins.
+- **HD upscaling:** when the best native size is smaller than the size being displayed (many legacy apps ship only 32–48 px), resample it in Rust to the display size × device pixel ratio with a high-quality filter (e.g. Lanczos with alpha-safe edge handling and light sharpening) instead of letting the webview stretch it. A genuine larger native icon is never replaced by an upscaled one. Upscaling cannot invent detail — the goal is *clean*, not *fake-sharp*. An optional local-only ML upscaler for tiny icons may sit behind the Ultra quality profile later.
+- **Where it lives:** extraction needs Shell/GDI calls, so it is `unsafe` glue inside `platform-windows`; sizing, upscaling and caching are a safe, separate icon service. Results are cached on disk in `cache/icons/` (§17), keyed by executable path + file modification time + target size, so a cache entry is invalidated when the app updates. Icons are loaded lazily and virtualized with the lists (§19.2) — never re-extracted per frame.
+- **Edge cases:** extraction failure, or an elevated process whose executable cannot be read (UIPI, §3) → a deterministic letter-tile fallback. Icons stay local; no network fetch (HR-S4). Icons with transparency or unusual shapes are placed on a consistent rounded tile so every app reads as one set.
 
 ### 11.5 Search / Command Center
 
@@ -1400,6 +1407,7 @@ Priority: **P0** = required for first daily-driver · **P1** = core vision · **
 | UI-012 | Customizable motion system | P1 | M05 |
 | UI-013 | Multi-monitor overlay support | P0 | M05 |
 | UI-014 | Reduced-motion and performance modes | P0 | M05 |
+| UI-015 | Real app icons from each executable (UWP: package logo), upscaled for HD, cached; no template icons (§11.4) | P0 | M01–M04 |
 | UX-001 | Two switcher presentations (mobile + desktop) | P0 | M05 |
 | UX-002 | Gestures | P2 | M06+ |
 | UX-003 | Universal search / command center | P1 | M04–M05 |
