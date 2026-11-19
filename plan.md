@@ -1469,7 +1469,7 @@ Priority: **P0** = required for first daily-driver · **P1** = core vision · **
 ## 26. Open questions
 
 1. **Product name and branding.** (Currently `{{PRODUCT_NAME}}`.)
-2. **Distribution:** MSIX vs. WiX/NSIS installer, auto-update channel, code signing. MSIX would help package identity (notifications) but constrains shell behavior.
+2. **Distribution:** MSIX vs. WiX/NSIS installer, auto-update channel, code signing. MSIX would help package identity (notifications) but constrains shell behavior. _Progress (2026-11-19): a per-user NSIS installer is built, and pushing a version tag publishes it automatically to GitHub Releases with a checksum and changelog notes (`.github/workflows/release.yml`, `CHANGELOG.md`; see `docs/DECISIONS.md` D19). Still open: MSIX vs. NSIS for package identity, an auto-update channel, and code signing — the installer is currently unsigned._
 3. **License / open-source stance.**
 4. **Minimum Windows version:** Windows 10 support vs. Windows 11 only.
 5. **First hardware profile:** target GPU/RAM for performance budgets, and iGPU behavior.
