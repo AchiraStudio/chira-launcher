@@ -16,8 +16,11 @@ manage windows, workspaces and displays, with a console-polished interface.
   (TypeScript bindings are generated from the Rust types).
 - **Adaptive Glass** design system: tokens, five materials, dark/light themes, accent colours, quality
   profiles (Performance / Balanced / Ultra) and reduced-motion support.
-- Shell: sidebar navigation across the plan's destinations, Home with a **to-scale map of your real monitors**,
-  and Settings (Personalization, Displays, System diagnostics).
+- **Shell (PS5-inspired):** launches in **borderless fullscreen**; a Home focus carousel whose background follows the
+  highlighted card, a **Dynamic Island** (time, live activities from real engine events, expandable system panel) and a
+  **floating dock** with hover magnification. Escape routes: **F11**, the Island's _Leave fullscreen_/_Exit_, and Alt+F4.
+- Home shows real data: a to-scale map of your monitors and the **application windows open right now** (read-only
+  window discovery — the first step of M01). Settings: Personalization, Displays, System diagnostics.
 - Real Windows integration through `platform-windows`: monitor enumeration (bounds, work area, per-monitor DPI,
   refresh rate), Windows version, DPI-awareness check.
 - Persistence: SQLite with versioned migrations, corruption quarantine, atomic writes and a
@@ -76,6 +79,7 @@ crates/
   desktop-engine/     UI-independent composition root (never depends on Tauri)
   platform-windows/   the ONLY crate with unsafe Win32 code
   display-manager/    monitor discovery and model
+  window-manager/     native window discovery (read-only today)
   settings-manager/   settings validation, persistence, recovery
   persistence/        SQLite (SQLx) + migrations + atomic writes
 docs/                 ARCHITECTURE · DECISIONS · DESIGN_SYSTEM

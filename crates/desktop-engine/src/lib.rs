@@ -15,13 +15,14 @@ use std::time::Instant;
 use desktop_core::identity::{APP_IDENTIFIER, PRODUCT_NAME, PRODUCT_SLUG};
 use desktop_core::{AppPaths, EngineResult};
 use desktop_protocol::{
-    AppInfo, DatabaseStatus, Diagnostics, Display, DpiAwareness, EngineEvent, FrontendErrorReport,
-    PROTOCOL_VERSION, PathsInfo, Settings, SettingsPatch, SystemInfo,
+    AppInfo, DatabaseStatus, DesktopWindow, Diagnostics, Display, DpiAwareness, EngineEvent,
+    FrontendErrorReport, PROTOCOL_VERSION, PathsInfo, Settings, SettingsPatch, SystemInfo,
 };
 use display_manager::DisplayManager;
 use persistence::Database;
 use settings_manager::SettingsManager;
 use tokio::sync::broadcast;
+use window_manager::WindowManager;
 
 pub use diagnostics::{LogGuard, init_logging};
 pub use events::EventBus;
@@ -38,6 +39,7 @@ pub struct Engine {
     db: Database,
     settings: SettingsManager,
     displays: DisplayManager,
+    windows: WindowManager,
     events: EventBus,
     started: Instant,
     reports: ReportLimiter,
@@ -68,6 +70,7 @@ impl Engine {
             db,
             settings,
             displays,
+            windows: WindowManager::new(),
             events: EventBus::new(),
             started: Instant::now(),
             reports: ReportLimiter::new(MAX_FRONTEND_REPORTS_PER_MINUTE),
@@ -157,6 +160,11 @@ impl Engine {
                 .publish(EngineEvent::DisplaysChanged(refresh.displays.clone()));
         }
         Ok(refresh.displays)
+    }
+
+    /// Other applications' windows, front to back. Read-only (plan §5, M01 first step).
+    pub async fn windows(&self) -> EngineResult<Vec<DesktopWindow>> {
+        self.windows.list().await
     }
 
     pub async fn diagnostics(&self) -> EngineResult<Diagnostics> {

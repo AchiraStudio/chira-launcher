@@ -33,7 +33,7 @@ export default function SettingsPage() {
   if (!section) return null;
 
   return (
-    <div className="grid gap-4 p-1 pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
+    <div className="mx-auto grid w-full max-w-6xl gap-4 px-8 pt-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
       <nav aria-label="Settings sections" className="flex gap-1 lg:flex-col">
         {SECTIONS.map(({ id, label, icon: Icon }) => (
           <button

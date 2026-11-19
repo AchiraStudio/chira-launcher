@@ -1,9 +1,11 @@
 import type { AppInfo } from '@/services/bindings/AppInfo';
+import type { DesktopWindow } from '@/services/bindings/DesktopWindow';
 import type { Diagnostics } from '@/services/bindings/Diagnostics';
 import type { Display } from '@/services/bindings/Display';
 import type { EngineEvent } from '@/services/bindings/EngineEvent';
 import type { Settings } from '@/services/bindings/Settings';
 import type { SettingsPatch } from '@/services/bindings/SettingsPatch';
+import type { ShellWindowMode } from '@/services/bindings/ShellWindowMode';
 import { EXPECTED_PROTOCOL_VERSION } from '@/services/protocol';
 import { setTransport, type Transport } from '@/services/transport';
 
@@ -35,6 +37,29 @@ export const sampleDisplays: Display[] = [
     bounds: { x: 2560, y: 0, width: 1920, height: 1080 },
     workArea: { x: 2560, y: 0, width: 1920, height: 1080 },
     dpiScale: 1,
+  },
+];
+
+export const sampleWindows: DesktopWindow[] = [
+  {
+    id: '1a2b',
+    pid: 4242,
+    title: 'notes.txt - Notepad',
+    appName: 'Notepad',
+    exeName: 'notepad.exe',
+    bounds: { x: 100, y: 100, width: 900, height: 600 },
+    isMinimized: false,
+    isForeground: true,
+  },
+  {
+    id: '3c4d',
+    pid: 5151,
+    title: 'Calculator',
+    appName: 'Calculator',
+    exeName: 'ApplicationFrameHost.exe',
+    bounds: { x: 300, y: 200, width: 400, height: 600 },
+    isMinimized: true,
+    isForeground: false,
   },
 ];
 
@@ -70,6 +95,8 @@ export interface FakeEngine {
   calls: Array<{ command: string; args?: Record<string, unknown> }>;
   settings: Settings;
   displays: Display[];
+  windows: DesktopWindow[];
+  windowMode: ShellWindowMode;
   appInfo: AppInfo;
   /** Make the next call to `command` reject with this error. */
   failNext: (command: string, error: unknown) => void;
@@ -88,6 +115,8 @@ export function installFakeEngine(
     calls: [],
     settings: structuredClone(defaultSettings),
     displays: structuredClone(sampleDisplays),
+    windows: structuredClone(sampleWindows),
+    windowMode: 'fullscreen',
     appInfo: overrides.appInfo ?? sampleAppInfo,
     available: overrides.available ?? true,
     failNext: (command, error) => failures.set(command, error),
@@ -109,6 +138,13 @@ export function installFakeEngine(
     refresh_displays: () => fake.displays,
     get_diagnostics: () => sampleDiagnostics,
     report_frontend_error: () => undefined,
+    list_windows: () => fake.windows,
+    get_window_mode: () => fake.windowMode,
+    set_window_mode: (args) => {
+      fake.windowMode = args?.mode as ShellWindowMode;
+      return fake.windowMode;
+    },
+    exit_app: () => undefined,
   };
 
   const transport: Transport = {

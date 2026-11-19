@@ -1,20 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { readableForeground } from '@/lib/color';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { resolveMotion, resolveTheme } from './appearance';
-
-/** Subscribes to a media query and returns whether it currently matches. */
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const list = window.matchMedia(query);
-    const onChange = () => setMatches(list.matches);
-    list.addEventListener('change', onChange);
-    onChange();
-    return () => list.removeEventListener('change', onChange);
-  }, [query]);
-  return matches;
-}
 
 /**
  * Applies the user's appearance settings to the document root: theme, quality profile, motion and

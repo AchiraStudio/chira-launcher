@@ -17,6 +17,7 @@ display-manager = { workspace = true }
 persistence = { workspace = true }
 platform-windows = { workspace = true }
 settings-manager = { workspace = true }
+window-manager = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-appender = { workspace = true }

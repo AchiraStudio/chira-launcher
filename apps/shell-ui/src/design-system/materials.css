@@ -91,7 +91,7 @@
 .wallpaper {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   background:
     radial-gradient(
       60rem 38rem at 12% -8%,
@@ -136,4 +136,47 @@
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+/*
+ * Ambient tone: the background glow that follows the highlighted Home card (plan §11.1: highlighting
+ * an item crossfades the background — a crossfade, not an expensive full-screen effect). Each layer
+ * is static; only its opacity animates.
+ */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      70rem 46rem at 78% 18%,
+      color-mix(in oklab, var(--tone) 46%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      56rem 40rem at 6% 96%,
+      color-mix(in oklab, var(--tone) 24%, transparent),
+      transparent 70%
+    );
+}
+:root[data-theme='light'] .ambient {
+  background:
+    radial-gradient(
+      70rem 46rem at 78% 18%,
+      color-mix(in oklab, var(--tone) 30%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      56rem 40rem at 6% 96%,
+      color-mix(in oklab, var(--tone) 16%, transparent),
+      transparent 70%
+    );
+}
+:root[data-quality='performance'] .ambient {
+  background: radial-gradient(
+    70rem 46rem at 78% 18%,
+    color-mix(in oklab, var(--tone) 28%, transparent),
+    transparent 72%
+  );
 }

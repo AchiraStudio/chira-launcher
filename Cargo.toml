@@ -19,6 +19,7 @@ display-manager = { path = "crates/display-manager" }
 persistence = { path = "crates/persistence" }
 platform-windows = { path = "crates/platform-windows" }
 settings-manager = { path = "crates/settings-manager" }
+window-manager = { path = "crates/window-manager" }
 
 # External
 dirs = "7"

@@ -5,9 +5,10 @@ use std::sync::Arc;
 
 use desktop_engine::Engine;
 use desktop_protocol::{
-    AppInfo, Diagnostics, Display, FrontendErrorReport, ProtocolError, Settings, SettingsPatch,
+    AppInfo, DesktopWindow, Diagnostics, Display, ErrorCode, FrontendErrorReport, ProtocolError,
+    Settings, SettingsPatch, ShellWindowMode,
 };
-use tauri::State;
+use tauri::{AppHandle, State, WebviewWindow};
 
 type EngineState<'a> = State<'a, Arc<Engine>>;
 type CommandResult<T> = Result<T, ProtocolError>;
@@ -66,4 +67,54 @@ pub async fn get_diagnostics(engine: EngineState<'_>) -> CommandResult<Diagnosti
 #[tauri::command]
 pub fn report_frontend_error(engine: EngineState<'_>, report: FrontendErrorReport) {
     engine.report_frontend_error(report);
+}
+
+#[tauri::command]
+pub async fn list_windows(engine: EngineState<'_>) -> CommandResult<Vec<DesktopWindow>> {
+    engine.windows().await.map_err(|e| fail("list_windows", e))
+}
+
+// --- The shell's own window -------------------------------------------------------------------
+// Native window coordination belongs to the host layer (plan §4.1). These touch only the shell's
+// own window; managing other applications' windows is the engine's `window-manager`.
+
+fn window_failure(command: &str, err: tauri::Error) -> ProtocolError {
+    tracing::error!(command, %err, "window operation failed");
+    ProtocolError {
+        code: ErrorCode::Platform,
+        message: "The window could not be changed. See the log for details.".to_owned(),
+    }
+}
+
+fn mode_of(window: &WebviewWindow) -> Result<ShellWindowMode, tauri::Error> {
+    Ok(if window.is_fullscreen()? {
+        ShellWindowMode::Fullscreen
+    } else {
+        ShellWindowMode::Windowed
+    })
+}
+
+#[tauri::command]
+pub fn get_window_mode(window: WebviewWindow) -> CommandResult<ShellWindowMode> {
+    mode_of(&window).map_err(|e| window_failure("get_window_mode", e))
+}
+
+/// Switches the shell between borderless fullscreen and a normal window. The shell always
+/// *launches* fullscreen; windowed mode exists so the user can never be locked into it.
+#[tauri::command]
+pub fn set_window_mode(
+    window: WebviewWindow,
+    mode: ShellWindowMode,
+) -> CommandResult<ShellWindowMode> {
+    window
+        .set_fullscreen(mode == ShellWindowMode::Fullscreen)
+        .map_err(|e| window_failure("set_window_mode", e))?;
+    mode_of(&window).map_err(|e| window_failure("set_window_mode", e))
+}
+
+/// Quits the shell. The engine shuts down cleanly via the host's exit handler.
+#[tauri::command]
+pub fn exit_app(app: AppHandle) {
+    tracing::info!("exit requested by the user");
+    app.exit(0);
 }

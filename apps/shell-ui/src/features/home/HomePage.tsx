@@ -1,187 +1,67 @@
-import { ChevronRight, Cpu, Monitor, Palette } from 'lucide-react';
-import type { ReactNode } from 'react';
-import { DisplayMap } from '@/components/DisplayMap';
-import { Badge, Surface, cn } from '@/design-system';
-import { useMinuteClock } from '@/hooks/useMinuteClock';
-import { formatResolution, formatScale } from '@/lib/displayLayout';
-import { greetingFor } from '@/lib/greeting';
-import { useDisplayStore } from '@/stores/displayStore';
-import { useEngineStore } from '@/stores/engineStore';
-import { useNavStore, type SettingsSectionId } from '@/stores/navStore';
-import { useSettingsStore } from '@/stores/settingsStore';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { Badge, duration, easeStandard } from '@/design-system';
+import { useAmbientStore } from '@/stores/ambientStore';
+import { useNavStore } from '@/stores/navStore';
+import { Carousel } from './Carousel';
+import { DisplaysPanel } from './DisplaysPanel';
+import { RunningPanel } from './RunningPanel';
+import { homeCards, type HomeCard } from './homeCards';
 
-const dateFormat = new Intl.DateTimeFormat(undefined, {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-});
-
-interface QuickTileProps {
-  icon: ReactNode;
-  title: string;
-  lines: string[];
-  section: SettingsSectionId;
-}
-
-/** A glanceable summary that opens the matching Settings section. */
-function QuickTile({ icon, title, lines, section }: QuickTileProps) {
-  const openSettings = useNavStore((s) => s.openSettings);
+/** Title and description of the highlighted card, shown under the row like the PS5 home. */
+function Caption({ card }: { card: HomeCard }) {
   return (
-    <button
-      type="button"
-      onClick={() => openSettings(section)}
-      className={cn(
-        'mat mat-smoked group flex flex-col items-start gap-3 rounded-card p-5 text-left',
-        'transition-[border-color,transform] duration-(--motion-quick) ease-(--ease-standard)',
-        'hover:-translate-y-0.5 hover:border-accent/50',
-      )}
-    >
-      <span className="flex w-full items-center justify-between">
-        <span className="grid size-10 place-items-center rounded-xl bg-accent/15 text-accent">
-          {icon}
-        </span>
-        <ChevronRight
-          size={18}
-          className="text-faint transition-colors group-hover:text-fg"
-          aria-hidden
-        />
-      </span>
-      <span className="text-base font-extrabold">{title}</span>
-      <span className="space-y-0.5 text-sm text-muted">
-        {lines.map((line) => (
-          <span key={line} className="block">
-            {line}
-          </span>
-        ))}
-      </span>
-    </button>
-  );
-}
-
-function DisplaysPanel() {
-  const { displays, status, error } = useDisplayStore();
-  const refresh = useDisplayStore((s) => s.refresh);
-  const primary = displays.find((d) => d.isPrimary) ?? displays[0];
-
-  let body: ReactNode;
-  if (status === 'error') {
-    body = (
-      <div className="space-y-3" role="alert">
-        <p className="text-sm text-danger">Couldn’t read the displays: {error}</p>
-        <button
-          type="button"
-          onClick={() => void refresh()}
-          className="text-sm font-bold text-accent"
-        >
-          Try again
-        </button>
-      </div>
-    );
-  } else if (displays.length === 0) {
-    body = <p className="text-sm text-muted">Windows reported no active displays.</p>;
-  } else {
-    body = <DisplayMap displays={displays} />;
-  }
-
-  return (
-    <Surface
-      material="smoked"
-      className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
-    >
-      <div className="grid min-h-40 place-items-center">{body}</div>
-      <div className="flex flex-col justify-center gap-3">
-        <h2 className="text-lg font-extrabold">Your displays</h2>
-        {primary ? (
-          <>
-            <p className="text-sm text-muted">
-              {displays.length === 1
-                ? 'One display connected.'
-                : `${displays.length} displays arranged as shown.`}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Badge tone="accent">Primary · {primary.label}</Badge>
-              <Badge>{formatResolution(primary)}</Badge>
-              <Badge>{formatScale(primary)} scale</Badge>
-              {primary.refreshRateHz && <Badge>{primary.refreshRateHz} Hz</Badge>}
-            </div>
-          </>
-        ) : null}
-      </div>
-    </Surface>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={card.id}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: duration.quick, ease: easeStandard }}
+        className="space-y-2 px-24"
+        aria-live="polite"
+      >
+        <h2 className="text-4xl font-extrabold tracking-tight">{card.title}</h2>
+        <p className="max-w-xl text-base text-muted">{card.summary}</p>
+        {card.milestone && (
+          <Badge tone="accent">
+            Planned for {card.milestone.id} · {card.milestone.name}
+          </Badge>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
 export default function HomePage() {
-  const now = useMinuteClock();
-  const displays = useDisplayStore((s) => s.displays);
-  const appearance = useSettingsStore((s) => s.settings?.appearance);
-  const appInfo = useEngineStore((s) => s.appInfo);
+  const [index, setIndex] = useState(0);
+  const setTone = useAmbientStore((s) => s.setTone);
+  const navigate = useNavStore((s) => s.navigate);
+  const openSettings = useNavStore((s) => s.openSettings);
 
-  const primary = displays.find((d) => d.isPrimary) ?? displays[0];
-  const system = appInfo?.system;
+  const card = homeCards[index] ?? homeCards[0];
+
+  // The background follows the highlight; leaving Home restores the accent.
+  useEffect(() => {
+    setTone(card?.tone ?? null);
+    return () => setTone(null);
+  }, [card, setTone]);
+
+  if (!card) return null;
+
+  const open = (target: HomeCard) => {
+    if (target.settingsSection) openSettings(target.settingsSection);
+    else navigate(target.destination);
+  };
 
   return (
-    <div className="flex flex-col gap-10 px-2 pt-6 pb-10">
-      <section aria-labelledby="home-greeting" className="px-2">
-        <h2 id="home-greeting" className="text-5xl font-extrabold tracking-tight">
-          {greetingFor(now)}
-        </h2>
-        <p className="mt-2 text-lg text-muted">Your desktop, ready. · {dateFormat.format(now)}</p>
-      </section>
-
-      <section aria-label="Displays">
+    <div className="flex flex-col gap-4 pb-4">
+      <Carousel cards={homeCards} index={index} onIndexChange={setIndex} onActivate={open} />
+      <Caption card={card} />
+      <div className="grid gap-5 px-24 pt-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
         <DisplaysPanel />
-      </section>
-
-      <section aria-labelledby="quick-access" className="space-y-4">
-        <h2
-          id="quick-access"
-          className="px-2 text-xs font-bold tracking-[0.18em] text-faint uppercase"
-        >
-          Quick access
-        </h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <QuickTile
-            section="personalization"
-            icon={<Palette size={20} aria-hidden />}
-            title="Appearance"
-            lines={
-              appearance
-                ? [
-                    `${capitalize(appearance.theme)} theme`,
-                    `${capitalize(appearance.qualityProfile)} quality`,
-                  ]
-                : ['Loading…']
-            }
-          />
-          <QuickTile
-            section="displays"
-            icon={<Monitor size={20} aria-hidden />}
-            title="Displays"
-            lines={
-              primary
-                ? [
-                    `${displays.length} connected`,
-                    `${formatResolution(primary)} @ ${formatScale(primary)}`,
-                  ]
-                : ['None detected']
-            }
-          />
-          <QuickTile
-            section="system"
-            icon={<Cpu size={20} aria-hidden />}
-            title="System"
-            lines={[
-              system ? `${system.osName} · build ${system.osBuild}` : 'Windows',
-              appInfo ? `Chira Launcher ${appInfo.version}` : '',
-            ].filter(Boolean)}
-          />
-        </div>
-      </section>
+        <RunningPanel />
+      </div>
     </div>
   );
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

@@ -3,8 +3,11 @@ import { engine, subscribeToEngineEvents } from '@/services/engine';
 import { toEngineCallError } from '@/services/errors';
 import { EXPECTED_PROTOCOL_VERSION } from '@/services/protocol';
 import type { AppInfo } from '@/services/bindings/AppInfo';
+import type { EngineEvent } from '@/services/bindings/EngineEvent';
 import { useDisplayStore } from './displayStore';
+import { useIslandStore } from './islandStore';
 import { useSettingsStore } from './settingsStore';
+import { useShellStore } from './shellStore';
 
 export type EnginePhase = 'booting' | 'ready' | 'unavailable' | 'failed';
 
@@ -17,6 +20,23 @@ interface EngineState {
 }
 
 let booting: Promise<void> | null = null;
+
+/** Applies an engine event to the stores and lets the Island announce it. */
+function handleEngineEvent(event: EngineEvent): void {
+  const island = useIslandStore.getState();
+  if (event.type === 'settingsChanged') {
+    useSettingsStore.getState().applyRemote(event.payload);
+    island.announce({ kind: 'settings', title: 'Settings saved' });
+  } else {
+    useDisplayStore.getState().applyRemote(event.payload);
+    const count = event.payload.length;
+    island.announce({
+      kind: 'displays',
+      title: 'Displays changed',
+      detail: `${count} connected`,
+    });
+  }
+}
 
 export const useEngineStore = create<EngineState>((set) => ({
   phase: 'booting',
@@ -38,15 +58,12 @@ export const useEngineStore = create<EngineState>((set) => ({
         }
 
         // Subscribe before the initial reads so a change in between cannot be missed.
-        await subscribeToEngineEvents((event) => {
-          if (event.type === 'settingsChanged')
-            useSettingsStore.getState().applyRemote(event.payload);
-          else useDisplayStore.getState().applyRemote(event.payload);
-        });
+        await subscribeToEngineEvents(handleEngineEvent);
 
         await useSettingsStore.getState().load();
-        // A display failure is shown on the pages that need displays; it must not block the shell.
+        // These report their own failures on the pages that use them; neither blocks the shell.
         await useDisplayStore.getState().load();
+        await useShellStore.getState().load();
 
         set({ phase: 'ready', appInfo, error: null });
       } catch (thrown) {

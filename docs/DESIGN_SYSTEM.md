@@ -43,3 +43,13 @@ shadow. `Reduced` (or the Windows setting under `System`) sets `data-motion="red
 
 `Surface`, `Button`, `Badge`, `SegmentedControl`, `RadioCardGroup` (roving-tabindex keyboard model shared via
 `useRadioKeys`). Focus rings are always visible. Controller/spatial navigation arrives with the Input Manager (M05/M06).
+
+## Shell anatomy (plan §11)
+
+| Anchor         | Component             | Behaviour                                                                                                                                                                     |
+| -------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home           | `features/home`       | Listbox carousel (arrows / hover / Enter), 1.16× scale + glow ring on the highlighted card, caption below, `ambient` background crossfades to the card's tone (opacity only). |
+| Dynamic Island | `shell/DynamicIsland` | Compact pill (time) → brief **activity** (real engine events) → expanded system panel. One surface that resizes as a unit; Esc closes.                                        |
+| Floating dock  | `shell/Dock`          | Centred, detached, three zones. Hover magnification is a transform (`scale`, origin bottom) driven by a spring; disabled under reduced motion.                                |
+
+The shell launches **borderless fullscreen**; see HR-W11 for the escape routes.

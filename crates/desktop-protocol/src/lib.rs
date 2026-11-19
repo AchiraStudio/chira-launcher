@@ -12,6 +12,9 @@ pub mod display;
 pub mod error;
 pub mod event;
 pub mod settings;
+pub mod window;
+
+pub use window::{DesktopWindow, ShellWindowMode};
 
 pub use app::{
     AppInfo, DatabaseStatus, Diagnostics, DpiAwareness, FrontendErrorReport, FrontendErrorSource,

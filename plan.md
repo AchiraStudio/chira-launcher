@@ -1255,7 +1255,7 @@ Answer the highest-risk questions before committing (Appendix C): overlay above 
 
 ### M01: Native Foundation (highest priority)
 
-> **Status:** 🟨 In progress (2026-11-19). **Done, built and run:** Rust workspace; Tauri 2 + React 19 setup. **Not started:** process launching, HWND discovery/enumeration, borderless conversion, window restoration, Notepad + Calculator split-screen, window debugger. Exit criteria (Appendix B) cannot be tested yet.
+> **Status:** 🟨 In progress (2026-11-19). **Done, built and run:** Rust workspace; Tauri 2 + React 19 setup. **Started:** HWND discovery/enumeration — read-only, on-demand listing of real application windows (`window-manager` + `EnumWindows`; filters cloaked, tool, owned, shell and own windows), run against the real desktop. **Not started:** `SetWinEventHook` event-driven discovery + reconciliation, process launching, borderless conversion, window restoration, Notepad + Calculator split-screen, window debugger. Exit criteria (Appendix B) cannot be tested yet.
 
 Rust workspace · Tauri 2 + React setup · process launching · HWND discovery/enumeration · borderless conversion · window restoration · Notepad + Calculator split-screen · **window debugger**.
 **Exit:** reliably manage multiple real Windows apps (Appendix B prototype tests pass).
@@ -1283,7 +1283,7 @@ Discovery pipeline · Desktop/Start Menu import · metadata · categories/collec
 
 ### M05: Desktop Shell (connect the experience track)
 
-> **Status:** 🟨 In progress (2026-11-19). **Started:** Adaptive Glass design-system foundation (tokens, materials, themes, accent, quality profiles, reduced motion), shell frame with sidebar navigation, a basic Home (greeting + real display map), engine⇄UI event bridge. **Not started:** library/game UI, switchers, dock, Island, quick settings, notifications, workspace overview, overlay coordinator, per-monitor surfaces. Not yet daily-drivable.
+> **Status:** 🟨 In progress (2026-11-19). **Started:** Adaptive Glass design-system foundation (tokens, materials, themes, accent, quality profiles, reduced motion); borderless-fullscreen launch with F11 / Island escape routes; the three anchors — PS5-style Home (focus carousel, ambient background that follows the highlight), Dynamic Island (compact time + live activities from real engine events, expandable system panel), floating dock with hover magnification; Home panels fed by real data (displays, running windows); engine⇄UI event bridge. **Not started:** library/game UI and artwork, switchers, per-app dock zones, quick settings beyond the Island's quality switch, notifications, workspace overview, overlay coordinator, per-monitor surfaces, controller navigation. Not yet daily-drivable.
 
 Home dashboard · library/game UI · switcher (mobile + desktop) · dock · Island (real providers: media, volume, perf) · quick settings · notifications · workspace overview · overlay coordinator + per-monitor surfaces.
 **Exit:** daily-drivable as a companion app in Managed Desktop mode.

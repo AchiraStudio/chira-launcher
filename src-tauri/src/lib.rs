@@ -37,6 +37,7 @@ fn try_run() -> Result<(), String> {
         .setup(|app| {
             let engine = Arc::clone(app.state::<Arc<Engine>>().inner());
             bridge::spawn_event_bridge(app.handle().clone(), engine.subscribe());
+            apply_launch_window_mode(app);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -47,6 +48,10 @@ fn try_run() -> Result<(), String> {
             commands::refresh_displays,
             commands::get_diagnostics,
             commands::report_frontend_error,
+            commands::list_windows,
+            commands::get_window_mode,
+            commands::set_window_mode,
+            commands::exit_app,
         ])
         .build(tauri::generate_context!())
         .map_err(|e| {
@@ -60,4 +65,21 @@ fn try_run() -> Result<(), String> {
         }
     });
     Ok(())
+}
+
+/// The shell launches in borderless fullscreen (`tauri.conf.json`). `CHIRA_WINDOWED=1` is a
+/// development convenience that starts windowed instead; it is never needed by end users, who
+/// can leave fullscreen with F11 or from the Dynamic Island.
+fn apply_launch_window_mode(app: &tauri::App) {
+    if std::env::var_os("CHIRA_WINDOWED").is_none_or(|v| v.is_empty() || v == "0") {
+        return;
+    }
+    match app.get_webview_window("main") {
+        Some(window) => {
+            if let Err(err) = window.set_fullscreen(false) {
+                tracing::warn!(%err, "could not start windowed");
+            }
+        }
+        None => tracing::warn!("main window not found; cannot honour CHIRA_WINDOWED"),
+    }
 }

@@ -1,0 +1,17 @@
+[package]
+name = "window-manager"
+description = "Owns native HWND operations (plan §5). Today: read-only discovery of other applications' windows."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+desktop-core = { workspace = true }
+desktop-protocol = { workspace = true }
+platform-windows = { workspace = true }
+tokio = { workspace = true }

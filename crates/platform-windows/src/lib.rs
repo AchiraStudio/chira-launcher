@@ -9,7 +9,9 @@
 mod dialog;
 mod monitors;
 mod system;
+mod windows_enum;
 
 pub use dialog::show_fatal_error;
 pub use monitors::{PixelRect, RawMonitor, enumerate_monitors};
 pub use system::{OsVersion, RawDpiAwareness, os_version, process_dpi_awareness};
+pub use windows_enum::{RawWindow, current_process_id, enumerate_windows};
