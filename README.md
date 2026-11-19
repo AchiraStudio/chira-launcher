@@ -68,6 +68,28 @@ User data lives in `%LOCALAPPDATA%\ChiraLauncher\` (`database/`, `logs/`, `recov
 
 `pnpm verify` builds the UI before compiling Rust: the Tauri host embeds `apps/shell-ui/dist` at compile time.
 
+## Releasing
+
+Releases are built by GitHub Actions (`.github/workflows/release.yml`) when a version tag is pushed. The release gets
+the Windows installer, a `SHA256SUMS.txt`, and notes taken from `CHANGELOG.md`.
+
+1. As you work, add user-visible changes under `## [Unreleased]` in [`CHANGELOG.md`](CHANGELOG.md).
+2. To release, rename that section to `## [X.Y.Z] - YYYY-MM-DD` (and add a fresh `[Unreleased]`), then set the same
+   version in the root `Cargo.toml` (`[workspace.package]`), `package.json` and `apps/shell-ui/package.json`.
+   Run `cargo check` to refresh `Cargo.lock`.
+3. Check it locally: `node scripts/release-notes.mjs --current notes.md` (fails on any mismatch or missing entry).
+4. Commit to `main`, wait for CI to pass, then:
+   ```powershell
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+The workflow refuses to publish unless the tag is on `main`, matches every version, has a changelog entry, and
+`pnpm verify` passes. Tags with a suffix (`v0.2.0-beta.1`) are published as pre-releases. **Dry run:** Actions → Release →
+_Run workflow_ builds the installer and attaches it to the run without publishing anything.
+
+> The installer is not code-signed yet (a certificate is an open question in `plan.md` §26), so SmartScreen may warn.
+
 ## Repository layout
 
 ```text

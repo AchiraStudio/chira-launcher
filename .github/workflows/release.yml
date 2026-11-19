@@ -1,0 +1,125 @@
+# Builds the Windows installer and publishes it as a GitHub Release.
+#
+#   Release:  git tag v0.2.0 && git push origin v0.2.0
+#             (the version must match Cargo.toml + both package.json files and CHANGELOG.md must have a
+#              "## [0.2.0]" section — see "Releasing" in the README)
+#   Dry run:  Actions → Release → "Run workflow". Builds and uploads the installer as a workflow artifact;
+#             publishes nothing.
+#
+# Two jobs on purpose: `build` runs repository code and tooling with a read-only token; only `release`
+# holds the write permission, and it runs nothing but the preinstalled `gh` CLI on downloaded files.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: needed to prove the tag is on main
+
+      - name: Tag must be on main
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag ${GITHUB_REF_NAME} is not on main. Releases are only built from main."
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm (version pinned by package.json "packageManager")
+        shell: bash
+        run: npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]")"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Release gate (tag ↔ versions ↔ changelog) and release notes
+        id: notes
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then TARGET="$GITHUB_REF_NAME"; else TARGET="--current"; fi
+          node scripts/release-notes.mjs "$TARGET" release-notes.md | tee notes.log
+          echo "version=$(grep '^version=' notes.log | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      # Never ship something CI would reject.
+      - name: Verify (format, lint, types, rules, tests)
+        run: pnpm verify
+
+      - name: Build the installer (NSIS bundle only)
+        run: pnpm tauri build --bundles nsis
+
+      - name: Collect the release files
+        shell: bash
+        env:
+          VERSION: ${{ steps.notes.outputs.version }}
+        run: |
+          mkdir release
+          src=$(ls target/release/bundle/nsis/*-setup.exe | head -n 1)
+          [ -f "$src" ] || { echo "::error::installer not found"; exit 1; }
+          # GitHub rewrites spaces in asset names; use a stable, dash-separated name.
+          name="Chira-Launcher_${VERSION}_x64-setup.exe"
+          cp "$src" "release/$name"
+          (cd release && sha256sum "$name" > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          cp release-notes.md release/release-notes.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chira-launcher-${{ steps.notes.outputs.version }}
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the only job allowed to publish
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - name: Publish the GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          flags=()
+          # v1.2.3-beta.1 → marked as a pre-release
+          if [[ "$TAG" == *-* ]]; then flags+=(--prerelease); fi
+          gh release create "$TAG" \
+            --repo "$REPO" \
+            --verify-tag \
+            --title "Chira Launcher ${TAG#v}" \
+            --notes-file assets/release-notes.md \
+            "${flags[@]}" \
+            assets/Chira-Launcher_*_x64-setup.exe \
+            assets/SHA256SUMS.txt

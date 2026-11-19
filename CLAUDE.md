@@ -12,6 +12,7 @@ Read these before changing anything, in this order:
 - Run `pnpm verify` before committing. Never commit red. Never claim something works without running it.
 - No force-push, no history rewrite, no invented remotes, no discarding uncommitted work (HR-P2, HR-P3).
 - Frontend never calls Win32; native calls go `services/` → typed Tauri command → engine crate → `platform-windows`.
+- Record user-visible changes under `## [Unreleased]` in `CHANGELOG.md` as you make them; releases are cut by tag (see README "Releasing"). Never push a release tag without being asked.
 - After changing any DTO in `crates/desktop-protocol`, run `pnpm bindings` and commit the regenerated TypeScript.
 - Shell: PowerShell is the primary shell on this machine. `pnpm` lives in `%APPDATA%\npm`; in Git Bash add it to `PATH`.
 

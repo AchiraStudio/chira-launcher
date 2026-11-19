@@ -178,3 +178,24 @@ test('HR-P8: env files and key material are rejected', () => {
   assert.deepEqual(violationsFor({ 'signing/cert.pfx': 'x' }), ['HR-P8']);
   assert.deepEqual(violationsFor({ '.env.example': 'SECRET=' }), []);
 });
+
+test('HR-S6: workflow hygiene', () => {
+  const wf = (name, body) => ({ [`.github/workflows/${name}`]: body });
+  const ok =
+    'permissions:\n  contents: read\njobs:\n  a:\n    steps:\n      - uses: actions/checkout@v4\n      - uses: dtolnay/rust-toolchain@stable\n';
+  const write = ok.replace('contents: read', 'contents: write');
+  assert.deepEqual(violationsFor(wf('ci.yml', ok)), []);
+  assert.deepEqual(
+    violationsFor(wf('ci.yml', 'jobs: {}\n')),
+    ['HR-S6'],
+    'permissions are required',
+  );
+  assert.deepEqual(violationsFor(wf('ci.yml', ok + 'on:\n  pull_request_target:\n')), ['HR-S6']);
+  assert.deepEqual(violationsFor(wf('ci.yml', write)), ['HR-S6'], 'write only in release.yml');
+  assert.deepEqual(violationsFor(wf('release.yml', write)), []);
+  assert.deepEqual(
+    violationsFor(wf('ci.yml', ok + '      - uses: softprops/action-gh-release@v2\n')),
+    ['HR-S6'],
+    'unlisted third-party action',
+  );
+});

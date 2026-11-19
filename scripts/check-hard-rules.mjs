@@ -50,6 +50,9 @@ const BANNED_NATIVE = [
   ['HR-W7', /\brunas\b|requireAdministrator|ShellExecute\w*\s*\([^)]*["']runas["']/i, 'elevation'],
 ];
 
+/** Third-party GitHub Actions allowed in workflows (anything under `actions/` is always allowed). */
+const ALLOWED_ACTIONS = new Set(['dtolnay/rust-toolchain', 'Swatinem/rust-cache']);
+
 const TODO_WITHOUT_MILESTONE = /\bTODO\b(?!\(M0\d\))/;
 
 function* walk(dir) {
@@ -245,6 +248,41 @@ export function checkProject(root) {
             `capability \`${id}\` needs an owner-approved change to HARD_RULES.md`,
           );
       }
+    }
+  }
+
+  // HR-S6: GitHub workflow hygiene (supply chain + least privilege).
+  const workflowsDir = join(root, '.github', 'workflows');
+  if (existsSync(workflowsDir)) {
+    for (const name of readdirSync(workflowsDir).filter((f) => /\.ya?ml$/.test(f))) {
+      const file = join(workflowsDir, name);
+      const text = readFileSync(file, 'utf8');
+      if (!/^permissions:/m.test(text))
+        add('HR-S6', file, 0, 'declare top-level `permissions:` (least privilege)');
+      eachMatch(file, text, /pull_request_target/, (n) =>
+        add('HR-S6', file, n, '`pull_request_target` is banned'),
+      );
+      if (name !== 'release.yml')
+        eachMatch(file, text, /contents:\s*write/, (n) =>
+          add('HR-S6', file, n, '`contents: write` is only allowed in release.yml'),
+        );
+      lines(text).forEach((l, i) => {
+        const action = /^\s*-?\s*uses:\s*([^\s@]+)@/.exec(l)?.[1];
+        if (
+          action &&
+          !action.startsWith('.') &&
+          !action.startsWith('actions/') &&
+          !ALLOWED_ACTIONS.has(action)
+        )
+          add(
+            'HR-S6',
+            file,
+            i + 1,
+            'third-party action `' +
+              action +
+              '` is not on the allowlist (change HARD_RULES.md and this checker to add one)',
+          );
+      });
     }
   }
 
