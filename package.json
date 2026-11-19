@@ -1,0 +1,36 @@
+{
+  "name": "chira-launcher",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chira Launcher — a customizable desktop environment for Windows.",
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tauri dev",
+    "dev:ui": "pnpm --filter shell-ui dev",
+    "build": "tauri build",
+    "build:ui": "pnpm --filter shell-ui build",
+    "tauri": "tauri",
+    "check:rules": "node scripts/check-hard-rules.mjs",
+    "bindings": "cargo test -p desktop-protocol --quiet",
+    "bindings:check": "node scripts/check-bindings.mjs",
+    "format": "prettier --write . && cargo fmt --all",
+    "format:check": "prettier --check . && cargo fmt --all --check",
+    "lint": "pnpm lint:ui && pnpm lint:rust",
+    "lint:ui": "pnpm --filter shell-ui lint",
+    "lint:rust": "cargo clippy --workspace --all-targets -- -D warnings",
+    "typecheck": "pnpm --filter shell-ui typecheck",
+    "test": "pnpm test:rust && pnpm test:ui && pnpm test:scripts",
+    "test:rust": "cargo test --workspace",
+    "test:ui": "pnpm --filter shell-ui test",
+    "test:scripts": "node --test scripts/*.test.mjs",
+    "verify": "pnpm check:rules && pnpm format:check && pnpm build:ui && pnpm typecheck && pnpm lint && pnpm bindings:check && pnpm test && cargo build --workspace"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.5",
+    "prettier": "3.10.1"
+  }
+}

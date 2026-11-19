@@ -1,0 +1,8 @@
+node_modules
+dist
+target
+pnpm-lock.yaml
+plan.md
+apps/shell-ui/src/services/bindings
+src-tauri/gen
+src-tauri/icons

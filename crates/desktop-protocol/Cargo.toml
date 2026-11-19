@@ -1,0 +1,19 @@
+[package]
+name = "desktop-protocol"
+description = "Versioned command/event/DTO contract between the Rust engine and the React shell. TypeScript bindings are generated from these types."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+desktop-core = { workspace = true }
+serde = { workspace = true }
+ts-rs = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

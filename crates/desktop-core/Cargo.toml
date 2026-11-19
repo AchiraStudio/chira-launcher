@@ -1,0 +1,18 @@
+[package]
+name = "desktop-core"
+description = "Shared identity, error type and filesystem layout for the Chira Launcher engine."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+dirs = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

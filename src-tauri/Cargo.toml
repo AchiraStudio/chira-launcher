@@ -1,0 +1,26 @@
+[package]
+name = "chira-launcher"
+description = "Chira Launcher — a customizable desktop environment for Windows."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "chira_launcher_lib"
+
+[lints]
+workspace = true
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+desktop-core = { workspace = true }
+desktop-engine = { workspace = true }
+desktop-protocol = { workspace = true }
+platform-windows = { workspace = true }
+tauri = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }

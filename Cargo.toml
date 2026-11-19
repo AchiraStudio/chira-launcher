@@ -1,0 +1,53 @@
+[workspace]
+resolver = "3"
+members = ["src-tauri", "crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+# License is an open question (plan.md §26.3); intentionally not chosen yet.
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+# Internal crates
+desktop-core = { path = "crates/desktop-core" }
+desktop-protocol = { path = "crates/desktop-protocol" }
+desktop-engine = { path = "crates/desktop-engine" }
+display-manager = { path = "crates/display-manager" }
+persistence = { path = "crates/persistence" }
+platform-windows = { path = "crates/platform-windows" }
+settings-manager = { path = "crates/settings-manager" }
+
+# External
+dirs = "7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros"] }
+tauri = { version = "2.12", features = [] }
+tauri-build = { version = "2.7", features = [] }
+tempfile = "3"
+thiserror = "2"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "time", "macros"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+ts-rs = "12"
+windows = "0.62"
+
+[workspace.lints.rust]
+# HR-A2: all unsafe lives in crates/platform-windows, which opts out of workspace lints.
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+# HR-Q1: explicit error handling in non-test code.
+unwrap_used = "warn"
+expect_used = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+# Deliberately NOT panic = "abort": a panic in one task must stay contained (plan §20.9).

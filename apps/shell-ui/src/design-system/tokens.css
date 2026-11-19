@@ -1,0 +1,69 @@
+/* Adaptive Glass — design tokens (plan §16). Primitive palette → semantic roles → Tailwind theme. */
+
+:root {
+  /* Primitives: the plan's starting tokens (§16.2). */
+  --obsidian: #101114;
+  --graphite: #191c22;
+  --slate: #252a32;
+  --azure: #3979b9;
+
+  /* Accent: overridden at runtime from user settings (see app/useAppearance). */
+  --accent: #3979b9;
+  --accent-fg: #ffffff;
+
+  /* Motion tokens (§16.5). Values are mirrored in motion.ts for JS-driven animation. */
+  --motion-instant: 100ms;
+  --motion-quick: 160ms;
+  --motion-standard: 240ms;
+  --motion-spatial: 360ms;
+  --motion-cinematic: 500ms;
+  --motion-background: 700ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Shape */
+  --radius-card: 22px;
+  --radius-control: 12px;
+
+  --font-ui: 'Manrope Variable', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Cascadia Mono', 'Cascadia Code', ui-monospace, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+/* Dark is the default and the only theme before settings load, so there is no flash. */
+:root,
+:root[data-theme='dark'] {
+  --bg: var(--obsidian);
+  --surface-1: var(--graphite);
+  --surface-2: var(--slate);
+  --surface-3: #313744;
+  --fg: #eef1f6;
+  --muted: #9aa3b2;
+  --faint: #6f7888;
+  --line: rgb(255 255 255 / 0.09);
+  --line-strong: rgb(255 255 255 / 0.17);
+  --glass-highlight: rgb(255 255 255 / 0.1);
+  --shadow-rgb: 0 0 0;
+  --success: #4cc38a;
+  --warning: #e5a93c;
+  --danger: #f06d6d;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #eceff4;
+  --surface-1: #ffffff;
+  --surface-2: #f3f5f9;
+  --surface-3: #e5e9f0;
+  --fg: #12151b;
+  --muted: #4d5565;
+  --faint: #727a8a;
+  --line: rgb(16 20 28 / 0.1);
+  --line-strong: rgb(16 20 28 / 0.2);
+  --glass-highlight: rgb(255 255 255 / 0.7);
+  --shadow-rgb: 40 52 76;
+  --success: #17824f;
+  --warning: #9a6200;
+  --danger: #c43a3a;
+  color-scheme: light;
+}

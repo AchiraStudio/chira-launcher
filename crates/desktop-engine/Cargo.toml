@@ -1,0 +1,26 @@
+[package]
+name = "desktop-engine"
+description = "UI-independent composition root of the Chira Launcher engine (plan §4.1). Must never depend on Tauri."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+desktop-core = { workspace = true }
+desktop-protocol = { workspace = true }
+display-manager = { workspace = true }
+persistence = { workspace = true }
+platform-windows = { workspace = true }
+settings-manager = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-appender = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

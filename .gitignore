@@ -1,0 +1,43 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+
+# Build output
+dist/
+coverage/
+/src-tauri/gen/
+/src-tauri/WixTools/
+
+# Local data, logs, databases (HR-P8)
+*.log
+*.db
+*.db-shm
+*.db-wal
+.chira-dev-data/
+
+# Secrets and machine-specific config (HR-P8)
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.key
+*.p12
+signing/
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json
